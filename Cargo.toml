@@ -2,6 +2,9 @@
 name = "cargo-advrunner"
 version = "0.1.0"
 edition = "2021"
+description = "An advanced configurable cargo runner."
+license = "MIT"
+repository = "https://github.com/MOZGIII/cargo-advrunner"
 
 [dependencies]
 anyhow = "1"
