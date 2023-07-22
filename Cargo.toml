@@ -1,0 +1,10 @@
+[package]
+name = "cargo-advrunner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+duct = "0.13"
+serde = { version = "1", features = ["derive"] }
+toml = "0.7"
