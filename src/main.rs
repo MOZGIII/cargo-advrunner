@@ -1,3 +1,5 @@
+use anyhow::Context;
+
 #[derive(Debug, serde::Deserialize)]
 struct Config {
     pub run: Profile,
@@ -10,8 +12,9 @@ struct Profile {
 }
 
 fn load_config() -> Result<Config, anyhow::Error> {
-    let content = std::fs::read_to_string("advrunner.toml")?;
-    let config = toml::from_str(&content)?;
+    let content = std::fs::read_to_string("advrunner.toml")
+        .context("unable to read the advrunner config file")?;
+    let config = toml::from_str(&content).context("unable to parse the advrunner config file")?;
     Ok(config)
 }
 
