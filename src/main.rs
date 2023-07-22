@@ -16,7 +16,7 @@ fn load_config() -> Result<Config, anyhow::Error> {
 }
 
 fn detect_is_test() -> Result<bool, anyhow::Error> {
-    let mut args = std::env::args();
+    let mut args = std::env::args().skip(1);
     let Some(file) = args.next() else {
         anyhow::bail!("no file passed as an argument");
     };
@@ -25,7 +25,7 @@ fn detect_is_test() -> Result<bool, anyhow::Error> {
 }
 
 fn exec_profile(profile: &Profile) -> Result<(), anyhow::Error> {
-    let args = std::env::args_os();
+    let args = std::env::args_os().skip(1);
     duct::cmd(&profile.command, args).run()?;
     Ok(())
 }
