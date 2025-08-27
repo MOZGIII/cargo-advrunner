@@ -6,6 +6,7 @@ use anyhow::Context;
 struct Config {
     pub run: Profile,
     pub test: Profile,
+    pub doctest: Option<Profile>,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -50,14 +51,34 @@ fn locate_cargo_workspace_root() -> Result<String, anyhow::Error> {
     Ok(root)
 }
 
-fn detect_is_test() -> Result<bool, anyhow::Error> {
+enum Mode {
+    Unknown,
+    Test,
+    Doctest,
+}
+
+fn detect_mode() -> Result<Mode, anyhow::Error> {
     let mut args = std::env::args().skip(1);
     let Some(file) = args.next() else {
         anyhow::bail!("no file passed as an argument");
     };
     let path = PathBuf::from(file);
+
     // The path contains "deps", must be a test.
-    Ok(path.into_iter().any(|item| item == "deps"))
+    if path.iter().any(|item| item == "deps") {
+        return Ok(Mode::Test);
+    }
+
+    // The path starts with "rustdoctest", must be a doctest.
+    if path
+        .iter()
+        .flat_map(|item| item.to_str())
+        .any(|item| item.starts_with("rustdoctest"))
+    {
+        return Ok(Mode::Doctest);
+    }
+
+    Ok(Mode::Unknown)
 }
 
 fn exec_profile(profile: Profile, at: String) -> Result<(), anyhow::Error> {
@@ -69,8 +90,12 @@ fn exec_profile(profile: Profile, at: String) -> Result<(), anyhow::Error> {
 fn main() -> Result<(), anyhow::Error> {
     let cargo_workspace_root = locate_cargo_workspace_root()?;
     let config = load_config(&cargo_workspace_root)?;
-    let is_test = detect_is_test()?;
-    let profile = if is_test { config.test } else { config.run };
+    let mode = detect_mode()?;
+    let profile = match mode {
+        Mode::Doctest => config.doctest.unwrap_or(config.test),
+        Mode::Test => config.test,
+        Mode::Unknown => config.run,
+    };
     exec_profile(profile, cargo_workspace_root)?;
     Ok(())
 }
